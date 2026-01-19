@@ -982,7 +982,7 @@
     try {
       const [cData, sData] = await Promise.all([
         api('/get-collections'),
-        api('/account-status').catch(()=>({}))
+        api('/get-account-status').catch(()=>({}))
       ]);
 
       // AUTO-REDIRECT POLITICAL USERS
