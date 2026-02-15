@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventLens – Bulk Upload Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="assets/styles/staff-upload__style1.css">
+</head>
+<body class="min-h-screen p-4 md:p-10">
+
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 bg-zinc-900 border border-zinc-800 p-4 rounded-xl shadow-2xl hidden">
+        <p id="toastMsg"></p>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-10">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-black shadow-lg">
+                    <i class="fa-solid fa-bolt-lightning text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-heading font-extrabold tracking-tight leading-none">Bulk <span class="text-emerald-500">Uploader</span></h1>
+                    <p class="text-zinc-500 text-sm mt-1 flex items-center gap-2 text-hindi">
+                        Smart Resume & Batch Mode
+                        <span id="wakeLockStatus" class="hidden text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded border border-emerald-500/20 items-center gap-1">
+                            <i class="fa-solid fa-sun pulse-green"></i> STAY AWAKE ACTIVE
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div id="userInfo" class="hidden text-right">
+                <p class="text-xs text-zinc-500">Logged in as</p>
+                <p class="text-sm font-bold text-emerald-400">Photographer</p>
+                <button onclick="doLogout()" class="text-[10px] text-red-500 underline uppercase tracking-widest mt-1">Logout</button>
+            </div>
+        </div>
+
+        <div id="viewLogin" class="bg-zinc-950 border border-zinc-900 rounded-3xl p-10 text-center">
+            <i class="fa-solid fa-shield-halved text-5xl text-zinc-800 mb-6"></i>
+            <h2 class="text-3xl font-heading font-bold mb-4 text-hindi">Authentication Required</h2>
+            <button onclick="doLogin()" class="btn-primary w-full max-w-xs">Login via Cognito</button>
+        </div>
+
+        <div id="viewMain" class="hidden space-y-6">
+            
+            <div class="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 md:p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-500 mb-2 tracking-widest uppercase">Collection</label>
+                        <select id="colSelect" class="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white appearance-none focus:border-emerald-500 transition-colors" onchange="loadEvents()"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-500 mb-2 tracking-widest uppercase">Event</label>
+                        <select id="evSelect" class="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white appearance-none focus:border-emerald-500 transition-colors"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-zinc-800 hover:border-emerald-500 rounded-2xl p-8 text-center cursor-pointer transition-all bg-zinc-900/30">
+                        <i class="fa-solid fa-images text-3xl text-zinc-600 mb-3"></i>
+                        <h4 class="font-bold text-sm">Select Individual Files</h4>
+                        <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+                    </div>
+
+                    <div onclick="document.getElementById('folderInput').click()" class="border-2 border-dashed border-zinc-800 hover:border-emerald-500 rounded-2xl p-8 text-center cursor-pointer transition-all bg-emerald-500/5">
+                        <i class="fa-solid fa-folder-tree text-3xl text-emerald-500 mb-3"></i>
+                        <h4 class="font-bold text-sm text-emerald-500">Select Full Folder</h4>
+                        <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" onchange="handleFiles(this.files)">
+                    </div>
+                </div>
+            </div>
+
+            <div id="progressBox" class="hidden bg-zinc-950 border border-zinc-900 rounded-3xl p-6">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h3 class="font-bold text-lg" id="uploadTitle">Queue Ready</h3>
+                        <p class="text-zinc-500 text-xs mt-1" id="statsText">0 files ready</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-zinc-500 uppercase mb-1">Batch Progress</p>
+                        <p class="text-3xl font-heading font-black text-emerald-500 leading-none" id="totalPct">0%</p>
+                    </div>
+                </div>
+                
+                <div class="h-3 bg-zinc-900 rounded-full overflow-hidden mb-6">
+                    <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all duration-300"></div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex gap-4">
+                        <div class="bg-zinc-900 px-4 py-2 rounded-lg text-center min-w-[70px]">
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase">Done</p>
+                            <p class="text-lg font-bold" id="countUploaded">0</p>
+                        </div>
+                        <div class="bg-zinc-900 px-4 py-2 rounded-lg text-center min-w-[70px]">
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase">Skipped</p>
+                            <p class="text-lg font-bold text-blue-400" id="countSkipped">0</p>
+                        </div>
+                        <div class="bg-zinc-900 px-4 py-2 rounded-lg text-center min-w-[70px]">
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase">Failed</p>
+                            <p class="text-lg font-bold text-red-500" id="countFailed">0</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="btnPause" disabled onclick="togglePause()" class="btn-secondary hidden">
+                            <i class="fa-solid fa-pause"></i> Pause
+                        </button>
+                        <button id="btnStart" disabled onclick="startUpload()" class="btn-primary min-w-[200px]">
+                            <i class="fa-solid fa-play"></i> Start Upload
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest">Activity Monitor</h3>
+                    <button onclick="copyLogs()" class="text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1 rounded-md transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-copy"></i> COPY LOGS
+                    </button>
+                </div>
+                <div id="logList" class="space-y-1 h-48 overflow-y-auto custom-scroll text-[10px] font-mono p-2 bg-black/50 rounded-xl">
+                    <div class="text-zinc-600 italic">Select photos to begin monitoring system tasks...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/scripts/staff-upload__script1.js"></script>
+</body>
+</html>

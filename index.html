@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <title>EventLens – Smart AI Gallery</title>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/styles/index__style1.css">
+</head>
+<body>
+
+<audio id="popSound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+
+<div id="toastContainer" class="toast-container"></div>
+<div id="dateIndicator" class="date-indicator">Moments</div>
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"><i class="fa-solid fa-arrow-up"></i></button>
+
+<!-- Custom Camera Modal -->
+<div class="cam-modal" id="cameraModal">
+    <button class="cam-close" onclick="closeCamera()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+    <video id="camFeed" class="cam-video" autoplay playsinline muted></video>
+    <div class="cam-overlay">
+        <div class="scan-box">
+            <div class="scan-corner tl"></div> <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div> <div class="scan-corner br"></div>
+        </div>
+        <p style="position: absolute; bottom: 130px; color: #fff; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.8); background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px;">Position your face inside the frame</p>
+    </div>
+    <div class="cam-controls">
+        <button class="cam-btn" onclick="capturePhoto()"><div class="cam-btn-inner"></div></button>
+    </div>
+</div>
+
+<header id="pageHeader">
+    <div class="header-overlay">
+        <img id="pageLogo" class="brand-logo" alt="Logo" onerror="this.style.display='none'" referrerpolicy="no-referrer">
+        <div id="welcomeText" class="welcome-text"></div>
+        <h1 class="brand-title" id="pageTitle">Find Your Photos Instantly</h1>
+    </div>
+</header>
+
+<div class="container" id="searchContainer">
+    <div class="search-card glass">
+        <i class="fa-solid fa-wand-magic-sparkles search-icon"></i>
+        <h3>Find Your Photos Instantly</h3>
+        <p style="color:var(--muted); margin-bottom: 25px; line-height: 1.5; font-size: 15px;">
+            Upload a selfie and we’ll find all your photos from this event in seconds.
+        </p>
+        
+        <input type="file" id="selfieInput" accept="image/*" hidden onchange="handleSelfieSelect(this.files[0])">
+        <button class="btn-main" onclick="triggerHaptic(); openCamera()">
+            <i class="fa-solid fa-camera"></i> Take Selfie
+        </button>
+        <div style="margin-top: 15px;">
+            <button onclick="document.getElementById('selfieInput').click()" style="background:none; border:none; color: var(--muted); text-decoration: underline; cursor:pointer; font-size: 13px;">or upload from gallery</button>
+        </div>
+
+        <div id="selfiePreviewContainer" class="hidden" style="margin-top: 20px;">
+            <img id="selfiePreviewImg" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+        </div>
+
+        <div id="loader" class="hidden" style="margin-top: 25px;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="color:var(--muted); font-size: 14px; margin-top: 15px; font-weight: 500;" id="loaderText">Looking for your best moments…</p>
+        </div>
+        <link rel="stylesheet" href="assets/styles/index__style2.css">
+    </div>
+</div>
+
+<div class="container hidden" id="galleryContainer">
+    <div class="gallery-header">
+        <h3 style="margin:0; font-size: 18px; display:flex; align-items:center;">
+            Your Photos <span id="matchCount" class="count-badge">0</span>
+        </h3>
+        <button id="btnToggleSelect" class="tag-pill" onclick="triggerHaptic(); toggleSelectionMode()">
+            <i class="fa-solid fa-check-double"></i> Select Photos
+        </button>
+    </div>
+
+    <!-- SMART FILTERS -->
+    <div class="smart-filters" id="smartFilters"></div>
+    
+    <!-- TIMELINE CONTAINER -->
+    <div id="timelineContainer" style="margin-top: 15px;"></div>
+    
+    <!-- Infinite Scroll Sentinel -->
+    <div id="sentinel">
+        <div class="hidden" id="pageLoader">
+             <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--muted)"></i>
+        </div>
+    </div>
+    
+    <div class="hidden" id="noResultsMsg" style="text-align:center; padding: 40px;">
+        <div style="background: rgba(255,255,255,0.05); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+            <i class="fa-regular fa-face-frown-open" style="font-size: 32px; color: var(--muted);"></i>
+        </div>
+        <h3 style="margin:10px 0 5px;">No photos found yet</h3>
+        <p style="color:var(--muted); font-size:14px; margin-bottom:15px;">Don’t worry — try another selfie with better lighting.</p>
+        
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin-bottom:20px; text-align:left; font-size:13px; color:#ccc;">
+            <strong>Tips for better results:</strong>
+            <ul style="margin:5px 0 0 20px; padding:0;">
+                <li>Face the camera clearly</li>
+                <li>Avoid sunglasses or masks</li>
+                <li>Try good lighting</li>
+            </ul>
+        </div>
+        
+        <button class="tag-pill" onclick="location.reload()">Try Another Selfie</button>
+    </div>
+</div>
+
+<div class="action-bar glass" id="actionBar">
+    <div style="color: var(--accent); font-size: 11px; font-weight: 700; position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 5px 14px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        <span id="selCount">0</span> SELECTED
+    </div>
+    <button class="act-btn" onclick="triggerHaptic(); toggleSelectAll()"><i class="fa-regular fa-square-check"></i> All</button>
+    <button class="act-btn highlight" onclick="triggerHaptic(); downloadSelectedItems()"><i class="fa-solid fa-download"></i> Save</button>
+    <button class="act-btn" onclick="triggerHaptic(); downloadAsZip()"><i class="fa-solid fa-file-zipper"></i> Zip</button>
+    <button class="act-btn" onclick="triggerHaptic(); shareNative()"><i class="fa-solid fa-share-nodes"></i> Share</button>
+</div>
+
+<div class="modal" id="leadModal">
+    <div class="modal-card">
+        <div style="width: 70px; height: 70px; background: var(--accent-soft); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--accent-soft);">
+            <i class="fa-solid fa-check" style="color: var(--accent); font-size: 30px;"></i>
+        </div>
+        <h2 style="margin: 0 0 10px; font-size: 22px;">We Found Your Photos! 🎉</h2>
+        <p style="color: var(--muted); margin-bottom: 25px; font-size: 14px; line-height: 1.5;">
+            We found <span id="leadMatchCount" style="color: #fff; font-weight: 700;">0</span> photos where you appear.<br>Enter your details to view and save them.
+        </p>
+        <input id="guestName" class="lead-input" placeholder="Your Name" autocomplete="name">
+        <input id="guestMobile" class="lead-input" placeholder="Mobile Number" type="tel" autocomplete="tel">
+        <button class="btn-main" style="width: 100%; justify-content: center; margin-top: 10px;" onclick="triggerHaptic(); unlockGallery()">
+            View My Photos
+        </button>
+        <p style="font-size:12px; color:var(--muted); margin-top:15px;">Your details are safe and used only for this event.</p>
+    </div>
+</div>
+
+<!-- CAPTION MODAL -->
+<div class="modal" id="captionModal">
+    <div class="caption-modal-card">
+        <div class="caption-header">
+            <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 20px;"></i>
+            <h3 style="margin:0; font-size: 18px;">AI Caption ✨</h3>
+            <button onclick="document.getElementById('captionModal').classList.remove('open')" style="margin-left: auto; background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">&times;</button>
+        </div>
+        <div class="caption-content" id="captionResult"></div>
+        <div class="caption-actions">
+            <button class="btn-main" onclick="copyCaption()" style="width:100%; justify-content:center; padding: 12px;">Copy Caption</button>
+        </div>
+    </div>
+</div>
+
+<div class="viewer" id="viewer">
+    <button class="v-close" onclick="closeViewer()"><i class="fa-solid fa-xmark"></i></button>
+    <button class="v-fav" id="viewerFavBtn" onclick="toggleFavFromViewer()"><i class="fa-regular fa-heart"></i></button>
+    
+    <div class="v-nav v-prev" onclick="changeViewerPhoto(-1)"><i class="fa-solid fa-chevron-left"></i></div>
+    <img id="viewerImg" referrerpolicy="no-referrer">
+    <div class="v-nav v-next" onclick="changeViewerPhoto(1)"><i class="fa-solid fa-chevron-right"></i></div>
+    
+    <div class="v-actions">
+        <button class="v-btn-pill v-btn-magic" id="btnMagic" onclick="triggerHaptic(); generateAICaption()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Caption
+        </button>
+        <button class="v-btn-pill" id="viewerDlBtn" onclick="triggerHaptic(); downloadSingle()">
+            <i class="fa-solid fa-download"></i> Save HD Photo
+        </button>
+    </div>
+</div>
+
+<script src="assets/scripts/index__script1.js"></script>
+</body>
+</html>

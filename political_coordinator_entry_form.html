@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coordinator Entry - EventLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/styles/political_coordinator_entry_form__style1.css">
+</head>
+    <body class="min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="w-full max-w-lg glass rounded-2xl p-6 relative overflow-hidden transition-all duration-500" id="main-container">
+    <div class="absolute top-0 left-0 w-full h-1 brand-bg"></div>
+
+    <div id="header-image" class="hidden w-full h-24 rounded-xl mb-4 bg-slate-800/40 border border-white/5 overflow-hidden bg-cover bg-center"></div>
+
+    <div class="text-center mb-6" id="form-header">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/5 text-orange-500 mb-3 overflow-hidden border border-white/10">
+            <i id="default-icon" class="fa-solid fa-user-tie text-2xl"></i>
+            <img id="custom-logo" src="" class="w-full h-full object-contain scale-[1.15] hidden" alt="logo">
+        </div>
+        <h1 id="org-name" class="text-2xl font-extrabold brand-text">संयोजक (Coordinator) फॉर्म</h1>
+        <p id="org-subtitle" class="text-slate-300/80 text-xs mt-1">Coordinator Entry</p>
+        <p id="org-tagline" class="text-slate-400 text-[11px] mt-2 hidden"></p>
+    </div>
+
+      <form id="f" class="space-y-6">
+  <div class="grid gap-5 md:grid-cols-2">
+    <!-- Level -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">लेवल *</label>
+      <select id="level" required class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <option value="">Select</option>
+        <option value="mandal">मंडल</option>
+        <option value="vidhansabha">विधानसभा</option>
+        <option value="district">जिला</option>
+        <option value="state">प्रदेश</option>
+      </select>
+    </div>
+
+    <!-- Program Name -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">कार्यक्रम का नाम *</label>
+      <select id="program_name" name="program_name" required class="w-full rounded-xl bg-slate-900/40 border border-slate-700/60 px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+  <option value="">कार्यक्रम का नाम चुनें</option>
+</select>
+    </div>
+
+    <!-- District -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">जिला *</label>
+      <select id="district" required class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <option value="">Select</option>
+      </select>
+    </div>
+
+    <!-- Vidhansabha -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">विधानसभा *</label>
+      <select id="vidhansabha" required class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <option value="">Select</option>
+      </select>
+    </div>
+
+    <!-- Mandal -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">मंडल *</label>
+      <select id="mandal" required class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <option value="">Select</option>
+      </select>
+    </div>
+
+    <!-- Coordinator -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">संयोजक *</label>
+      <input id="coordinator_name" required placeholder="संयोजक का नाम"
+        class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">मोबाइल *</label>
+      <input id="coordinator_mobile" required inputmode="numeric" maxlength="10" placeholder="10 digit मोबाइल"
+        class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+    </div>
+
+    <!-- सह संयोजक 1 -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">सह संयोजक</label>
+      <input id="assistant_1_name" placeholder="सह संयोजक का नाम"
+        class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">मोबाइल</label>
+      <input id="assistant_1_mobile" inputmode="numeric" maxlength="10" placeholder="10 digit मोबाइल"
+        class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+    </div>
+
+    <!-- सह संयोजक 2 -->
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">सह संयोजक</label>
+      <input id="assistant_2_name" placeholder="सह संयोजक का नाम"
+        class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-200 mb-2">मोबाइल</label>
+      <input id="assistant_2_mobile" inputmode="numeric" maxlength="10" placeholder="10 digit मोबाइल"
+        class="w-full rounded-xl bg-slate-900/60 border border-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div id="msg" class="text-sm text-slate-300"></div>
+    <button id="btn" type="submit"
+      class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-6 py-3 font-semibold text-white shadow-lg shadow-orange-500/20 hover:opacity-95 active:opacity-90">
+      Submit
+    </button>
+  </div>
+</form>
+
+    <div id="status" class="mt-4 text-center text-xs font-medium hidden"></div>
+    <div class="mt-4 text-center text-[11px] text-slate-400/80">
+      <span id="footer-text"></span>
+    </div>
+</div>
+
+    <!-- SUCCESS SCREEN -->
+<div id="success-screen" class="hidden w-full max-w-lg glass rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[420px]">
+    <div class="w-20 h-20 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center mb-6 text-4xl shadow-lg shadow-emerald-500/10 border border-emerald-500/20">
+        <i class="fa-solid fa-check"></i>
+    </div>
+    <h2 class="text-2xl font-extrabold text-white mb-2">धन्यवाद!</h2>
+    <p id="success-msg" class="text-slate-200/90 mb-8 leading-relaxed">संयोजक की जानकारी सेव हो गई है।</p>
+    <button onclick="window.location.reload()" class="px-6 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-sm text-white transition">
+        <i class="fa-solid fa-rotate-right mr-2"></i> नया फॉर्म
+    </button>
+</div>
+
+    <script src="assets/scripts/political_coordinator_entry_form__script1.js"></script>
+
+    </body>
+    </html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visitor Form - EventLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/styles/political_visitor_form__style1.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+    <body class="min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="w-full max-w-lg glass rounded-2xl p-6 relative overflow-hidden transition-all duration-500" id="main-container">
+        <!-- Top Accent -->
+        <div class="absolute top-0 left-0 w-full h-1 brand-bg"></div>
+
+        <!-- Optional Header Image -->
+        <!-- Header banner (Admin branding) -->
+    <div id="header-wrap" class="hidden w-full rounded-xl mb-4 overflow-hidden bg-slate-800/40 border border-white/5">
+      <img id="header-image" alt="Header" class="w-full h-32 sm:h-44 object-cover object-center" />
+    </div>
+
+        <!-- Header -->
+        <div class="text-center mb-6" id="form-header">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 text-orange-500 mb-3 overflow-hidden border border-white/10">
+                <i id="default-icon" class="fa-solid fa-building-user text-2xl"></i>
+                <img id="custom-logo" src="" class="w-full h-full object-contain scale-[1.15] hidden" alt="logo">
+            </div>
+            <h1 id="org-name" class="text-2xl font-extrabold brand-text">कार्यालय आगंतुक फॉर्म</h1>
+            <p id="org-subtitle" class="text-slate-300/80 text-xs mt-1">Visitor Entry System</p>
+            <p id="org-tagline" class="text-slate-400 text-[11px] mt-2 hidden"></p>
+        </div>
+
+        <!-- FORM -->
+        <form id="f" class="space-y-4">
+            <!-- Mobile -->
+            <div>
+                <label class="block text-xs font-medium text-slate-300/80 mb-1">मोबाइल नंबर (Mobile)</label>
+                <div class="relative">
+                    <input type="tel" id="mobile" class="w-full rounded-lg px-3 py-2.5 text-sm input-field pl-10" placeholder="10-digit Number" inputmode="numeric" pattern="[0-9]{10}" required>
+                    <i class="fa-solid fa-phone absolute left-3 top-3 text-slate-500 text-xs"></i>
+                    <div id="mobile-loader" class="absolute right-3 top-3 hidden">
+                        <i class="fa-solid fa-circle-notch fa-spin text-orange-400"></i>
+                    </div>
+                </div>
+                <p id="user-found-msg" class="text-[10px] text-emerald-400 mt-1 hidden">
+                  <i class="fa-solid fa-check-circle mr-1"></i> डेटा मिला! विवरण भर दिया गया है।
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300/80 mb-1">नाम (Name)</label>
+                    <input type="text" id="name" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="Visitor Name" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300/80 mb-1">पद (Designation)</label>
+                    <input type="text" id="designation" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="e.g. मंडल अध्यक्ष">
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <label class="block text-xs font-medium text-slate-300/80 mb-1">जिला (District)</label>
+                <select id="district" class="w-full rounded-lg px-3 py-2.5 text-sm input-field">
+                    <option value="">— जिला चुनें —</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300/80 mb-1">विधानसभा (Vidhan Sabha)</label>
+                    <select id="vidhansabha" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" disabled>
+                        <option value="">— पहले जिला चुनें —</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300/80 mb-1">मंडल (Mandal)</label>
+                    <select id="mandal" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" disabled>
+                        <option value="">— पहले विधानसभा चुनें —</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300/80 mb-1">पता / वार्ड / बूथ</label>
+                <input type="text" id="address" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="Address Details">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-300/80 mb-1">आने का कारण (Purpose)</label>
+                <div class="relative">
+                    <select id="reason" class="w-full rounded-lg px-3 py-2.5 text-sm input-field appearance-none" required>
+                        <option value="">— कारण चुनें —</option>
+                        <option value="Meet District President">जिला अध्यक्ष जी से भेट</option>
+                        <option value="Transfer/Complaint/Govt Work">ट्रान्सफर / शिकायत / शासकीय कार्य</option>
+                        <option value="Office Meeting">कार्यालय पर बैठक</option>
+                        <option value="General Visit">सामान्य उपस्तिथि / शिष्टाचार भेंट</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+                </div>
+            </div>
+
+            <!-- Selfie -->
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-slate-200 uppercase tracking-wider">सेल्फी (Selfie) <span class="text-red-400">*</span></label>
+                <div class="relative group">
+                    <input type="file" id="selfie" accept="image/*" capture="user" class="hidden" onchange="previewImage(event)">
+                    <label for="selfie" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/15 rounded-xl cursor-pointer hover:border-orange-400 hover:bg-white/5 transition-all overflow-hidden" id="dropzone">
+                        <div id="preview-container" class="hidden w-full h-full relative">
+                            <img id="preview" class="w-full h-full object-cover" alt="preview">
+                            <button type="button" onclick="clearImage(event)" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 w-7 h-7 flex items-center justify-center shadow-lg hover:scale-110 transition">
+                              <i class="fa-solid fa-times text-xs"></i>
+                            </button>
+                        </div>
+                        <div id="upload-placeholder" class="text-center p-4">
+                            <i class="fa-solid fa-camera text-2xl text-slate-400 mb-2 group-hover:text-orange-300 transition"></i>
+                            <p class="text-xs text-slate-300/80">फोटो लें / Upload Photo</p>
+                            <p class="text-[10px] text-slate-400 mt-1">JPG / PNG</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full brand-bg text-white font-extrabold py-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 hover:opacity-95">
+                <span>सुरक्षित करें (Save)</span>
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+        </form>
+
+        <div id="status" class="mt-4 text-center text-xs font-medium hidden"></div>
+
+        <div class="mt-4 text-center text-[11px] text-slate-400/80">
+          <span id="footer-text"></span>
+        </div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div id="success-screen" class="hidden w-full max-w-lg glass rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[420px]">
+        <div class="w-20 h-20 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center mb-6 text-4xl shadow-lg shadow-emerald-500/10 border border-emerald-500/20">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold text-white mb-2">धन्यवाद!</h2>
+        <p id="success-msg" class="text-slate-200/90 mb-8 leading-relaxed">
+            आपकी जानकारी सफलतापूर्वक दर्ज कर ली गई है।
+        </p>
+        <button onclick="window.location.reload()" class="px-6 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-sm text-white transition">
+            <i class="fa-solid fa-user-plus mr-2"></i> नई एंट्री करें
+        </button>
+    </div>
+
+    <script src="assets/scripts/political_visitor_form__script1.js"></script>
+    </body>
+    </html>

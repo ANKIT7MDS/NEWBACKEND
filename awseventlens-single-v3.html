@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- FIX ADDED: Prevents 403 Forbidden on S3 Images -->
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>EventLens Pro – Admin Console</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" crossorigin href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="assets/styles/awseventlens-single-v3__style1.css">
+</head>
+
+<body>
+  <div id="toast"></div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <button class="lb-close" onclick="closeLightbox()">×</button>
+    <img class="lb-img" id="lbImage" src="" />
+    <div class="lb-meta" id="lbMeta"></div>
+    <div class="lb-controls">
+      <button class="btn secondary lb-nav-btn hidden" onclick="navLightbox(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="btn secondary" onclick="downloadCurrentPhoto()">Download</button>
+      <button class="btn danger" id="lbDeleteBtn" onclick="deleteCurrentPhoto()">Delete</button>
+      <button class="btn secondary lb-nav-btn hidden" onclick="navLightbox(1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <!-- EDIT USER MODAL -->
+  <div id="editUserModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 class="modal-head"><i class="fa-solid fa-user-pen"></i> Edit Account</h3>
+      <input type="hidden" id="eduId">
+      
+      <label class="text-sm" style="display:block; margin-bottom:6px; color:#aaa;">Plan</label>
+      <select id="eduPlan" style="margin-bottom:15px;">
+
+          <option value="trial">Trial (2GB / 14 Days)</option>
+          <option value="starter">Starter (50GB)</option>
+          <option value="basic">Basic (200GB)</option>
+          <option value="pro">Pro (1TB)</option>
+          <option value="studio">Studio (5TB)</option>
+      </select>
+
+      <label class="text-sm" style="display:block; margin-bottom:6px; color:#aaa;">Account Status</label>
+      <select id="eduStatus" style="margin-bottom:15px;">
+          <option value="active">Active</option>
+          <option value="disabled">Disabled</option>
+      </select>
+
+      <label class="text-sm" style="display:block; margin-bottom:6px; color:#aaa;">Expiry Date</label>
+      <input type="date" id="eduExpiry" style="margin-bottom:25px;">
+
+      <div class="row" style="justify-content:flex-end; gap:10px;">
+          <button class="btn secondary" onclick="closeEditModal()">Cancel</button>
+          <button class="btn primary" onclick="saveEditUser()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE USER MODAL -->
+  <div id="deleteUserModal" class="modal-overlay hidden">
+    <div class="modal-box" style="border-color: #ef4444;">
+      <h3 class="modal-head" style="color:#ef4444"><i class="fa-solid fa-triangle-exclamation"></i> Delete User</h3>
+      <input type="hidden" id="delUserId">
+      <p class="text-muted" style="margin-bottom:20px;">What kind of deletion do you want to perform?</p>
+      
+      <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:25px;">
+          <label style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; gap:10px; cursor:pointer;">
+              <input type="radio" name="delType" value="account_only" checked>
+              <div>
+                  <div style="font-weight:700; color:#fff">Delete Account Only</div>
+                  <div class="text-sm text-muted">Removes login access. Data remains in S3/DB.</div>
+              </div>
+          </label>
+          <label style="background:rgba(239,68,68,0.1); padding:10px; border-radius:8px; display:flex; gap:10px; cursor:pointer; border:1px solid rgba(239,68,68,0.3);">
+              <input type="radio" name="delType" value="delete_all">
+              <div>
+                  <div style="font-weight:700; color:#ef4444">Delete Everything</div>
+                  <div class="text-sm text-muted" style="color:#fca5a5">Wipes photos, collections, and account. Irreversible.</div>
+              </div>
+          </label>
+      </div>
+
+      <div class="row" style="justify-content:flex-end; gap:10px;">
+          <button class="btn secondary" onclick="closeDeleteModal()">Cancel</button>
+          <button class="btn danger" onclick="confirmDeleteUser()">Confirm Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" id="mainWrap">
+    <div class="topbar">
+      <div class="logo"><i class="fa-solid fa-camera-retro"></i> EventLens <span>Pro</span></div>
+      <div class="row">
+        <!-- Impersonation Badge -->
+        <div class="text-sm hidden" id="impBadge" style="background: rgba(59,130,246,0.18); color:#93c5fd; padding: 6px 12px; border-radius: 20px; border:1px solid rgba(59,130,246,0.35);">
+          <i class="fa-solid fa-user-shield"></i> Impersonating: <span id="impName">-</span>
+        </div>
+        <!-- Super Admin Badge -->
+        <div class="text-sm hidden" id="saBadge" style="background: rgba(255, 64, 129, 0.2); color:#ff4081; padding: 6px 12px; border-radius: 20px; border:1px solid rgba(255, 64, 129, 0.4);">
+          <i class="fa-solid fa-shield-halved"></i> Super Admin
+        </div>
+        <div class="text-sm" id="userBadge" style="background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px;">Guest</div>
+        <button class="btn secondary hidden" id="btnBackToSuperAdmin" onclick="stopImpersonation()">
+          <i class="fa-solid fa-rotate-left"></i> Back to Super Admin
+        </button>
+        <button class="btn primary" id="btnLogin" onclick="doLogin()">Login</button>
+        <button class="btn danger hidden" id="btnLogout" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="view" id="vLogin">
+      <div class="card" style="max-width: 480px; margin: 80px auto; text-align: center; padding: 40px;">
+        <h2>Welcome Back</h2>
+        <button class="btn primary" onclick="doLogin()">Login via AWS Cognito</button>
+      </div>
+    </div>
+
+    <div class="view" id="vDash">
+      <div class="row" style="margin-bottom: 24px;">
+        <h2 style="margin: 0;">Dashboard Overview</h2>
+      </div>
+
+      <!-- PERSONAL STATS GRID (Hidden for pure admin, Visible for photographer/impersonation) -->
+      <div class="grid" id="phStatsGrid" style="margin-bottom: 32px;">
+        <div class="kpi-box"><div class="text-sm" style="font-weight: 700; color: var(--text-muted);">COLLECTIONS</div><div class="kpi-val" id="dCols">0</div></div>
+        <div class="kpi-box"><div class="text-sm" style="font-weight: 700; color: var(--text-muted);">TOTAL PHOTOS</div><div class="kpi-val" id="dPhotos">Loading...</div></div>
+        <div class="kpi-box"><div class="text-sm" style="font-weight: 700; color: var(--text-muted);">STORAGE USED</div><div class="kpi-val" id="dStorage">Loading...</div></div>
+        <div class="kpi-box"><div class="text-sm" style="font-weight: 700; color: var(--text-muted);">STATUS</div><div class="kpi-val" id="dStatus" style="font-size: 20px; color: var(--primary);">Active</div></div>
+      </div>
+
+      <!-- SUPER ADMIN SECTION -->
+      <div class="card hidden" id="saSection" style="margin-bottom:24px; border-color: rgba(255, 64, 129, 0.4);">
+        <div class="row" style="justify-content: space-between; margin-bottom: 16px;">
+          <div>
+            <h3 style="color:#ff4081; margin:0;"><i class="fa-solid fa-users-gear"></i> Super Admin Control</h3>
+            <div class="text-sm text-muted" style="margin-top:6px;">Manage Photographers & Political Organizations</div>
+          </div>
+          <div class="row" style="gap:10px;">
+            <button class="btn secondary" onclick="loadSuperAdminStats()"><i class="fa-solid fa-chart-line"></i> Refresh KPIs</button>
+            <button class="btn primary" onclick="toggleNewUser(true)"><i class="fa-solid fa-plus"></i> Add Account</button>
+          </div>
+        </div>
+
+        <!-- Global KPIs -->
+        <div class="grid" style="margin-bottom: 18px;">
+          <div class="kpi-box"><div class="text-sm" style="font-weight:700; color:var(--text-muted);">ACCOUNTS</div><div class="kpi-val" id="saTotalPhotographers">-</div></div>
+          <div class="kpi-box"><div class="text-sm" style="font-weight:700; color:var(--text-muted);">COLLECTIONS</div><div class="kpi-val" id="saTotalCollections">-</div></div>
+          <div class="kpi-box"><div class="text-sm" style="font-weight:700; color:var(--text-muted);">UPLOADED PHOTOS</div><div class="kpi-val" id="saTotalUploads">-</div></div>
+          <div class="kpi-box"><div class="text-sm" style="font-weight:700; color:var(--text-muted);">GUEST SEARCHES</div><div class="kpi-val" id="saTotalGuestSearch">-</div></div>
+          <div class="kpi-box"><div class="text-sm" style="font-weight:700; color:var(--text-muted);">SEARCH RESULTS</div><div class="kpi-val" id="saTotalSearchResults">-</div></div>
+          <div class="kpi-box"><div class="text-sm" style="font-weight:700; color:var(--text-muted);">USED DATA</div><div class="kpi-val" id="saTotalUsedData">-</div>
+          <div class="kpi-box">
+            <div class="kpi-label" style="color:var(--text-muted);">POLITICAL ENTRIES</div>
+            <div class="kpi-val" id="saTotalPoliticalEntries">-</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label" style="color:var(--text-muted);">POLITICAL FACES</div>
+            <div class="kpi-val" id="saTotalPoliticalFaces">-</div>
+          </div>
+</div>
+        </div>
+
+        <!-- Add User Form (Updated with Account Type and Dynamic Placeholder) -->
+        <div class="hidden" id="newUserBox" style="background: rgba(255,255,255,0.05); padding:16px; border-radius:12px; margin-bottom:20px;">
+          <div class="row">
+            <!-- Order adjusted for better UX -->
+            <div style="flex:1">
+                <label class="text-sm text-muted">Account Type</label>
+                <select id="nuType" style="border:1px solid var(--primary);" onchange="toggleAccountTypeUI()">
+                  <option value="photographer">📸 Photographer</option>
+                  <option value="political">🚩 Political (BJP)</option>
+                </select>
+            </div>
+            <div style="flex:2">
+                <label class="text-sm text-muted">Email</label>
+                <input id="nuEmail" placeholder="e.g. admin@studio.com" />
+            </div>
+            <div style="flex:2">
+                <label class="text-sm text-muted" id="lblName">Studio Name</label>
+                <input id="nuName" placeholder="Organization/Studio Name" />
+            </div>
+            <div style="flex:1">
+                <label class="text-sm text-muted">Plan</label>
+                <select id="nuPlan">
+
+          <option value="trial">Trial (2GB / 14 Days)</option>
+          <option value="starter">Starter (50GB)</option>
+          <option value="basic">Basic (200GB)</option>
+          <option value="pro">Pro (1TB)</option>
+          <option value="studio">Studio (5TB)</option>
+      </select>
+            </div>
+            <!-- Added Temporary Password Field -->
+            <div style="flex:1">
+                <label class="text-sm text-muted">Temp Password</label>
+                <input id="nuPass" type="text" placeholder="Optional" />
+            </div>
+            
+            <button class="btn primary" onclick="createPhotographer()" style="margin-top:20px"><i class="fa-solid fa-check"></i> Create</button>
+            <button class="btn secondary" onclick="toggleNewUser(false)" style="margin-top:20px">Cancel</button>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content: space-between; margin: 10px 0 14px;">
+          <div class="row" style="gap:10px; flex:1;">
+            <input id="saSearch" oninput="renderPhotographersTable()" placeholder="Search by name/email..." style="max-width:420px;" />
+            <select id="saFilterStatus" onchange="renderPhotographersTable()" style="max-width:220px;">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="disabled">Disabled</option>
+            </select>
+          </div>
+          <button class="btn secondary" onclick="loadPhotographers()"><i class="fa-solid fa-rotate-right"></i> Refresh List</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Organization / Studio</th>
+                <th>Email / ID</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Usage</th>
+                <th>Counts</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tblPhotographers">
+              <tr><td align="center" class="text-muted" colspan="7">Loading accounts...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- COLLECTIONS CARD (Hidden for pure admin) -->
+      <div class="card" id="phCollectionsCard">
+        <div class="row" style="justify-content: space-between; margin-bottom: 24px;">
+          <h3>My Collections</h3>
+          <button class="btn primary" id="btnCreateCol" onclick="toggleNewCol(true)"><i class="fa-solid fa-plus"></i> New Collection</button>
+        </div>
+        <div class="card hidden" id="newColBox">
+          <input id="ncName" placeholder="e.g. Rahul Wedding" />
+          <button class="btn primary" onclick="createCollection()">Create</button>
+        </div>
+        <div class="col-list" id="colList"></div>
+      </div>
+    </div>
+
+    <!-- Collection Detail View -->
+    <div class="view" id="vCol">
+      <div class="row" style="margin-bottom: 24px; justify-content: space-between;">
+        <button class="btn secondary" onclick="route('dashboard')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <h2 id="cdTitle">-</h2>
+      </div>
+      <div class="text-sm text-muted" id="cdId" style="margin-bottom: 20px;">ID: -</div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="setTab('tGal')">Gallery</button>
+        <button class="tab" onclick="setTab('tEvents')">Events</button>
+        <button class="tab" onclick="setTab('tUp')">Upload</button>
+        <button class="tab" onclick="setTab('tLink')">Links</button>
+        <button class="tab" onclick="setTab('tPol')">Political</button>
+        <button class="tab" onclick="setTab('tClient')">Client Selections</button>
+        <button class="tab" onclick="setTab('tLeads')">Guest Leads</button>
+        <button class="tab" onclick="setTab('tSettings')">Branding & Settings</button>
+      </div>
+
+      <!-- TAB 1: GALLERY -->
+      <div class="tab-content active" id="tGal">
+        <div class="card">
+          <div class="row" style="margin-bottom: 20px; gap: 10px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+            <select id="galEventFilter" onchange="loadPhotos(true)" style="width: 150px;">
+              <option value="">All Events</option>
+            </select>
+            <input id="galDateFilter" onchange="loadPhotos(true)" style="width: 140px;" type="date" />
+            <input id="galTextFilter" onkeypress="if(event.key==='Enter') loadPhotos(true)" placeholder="Search Tag/Text..." style="flex: 1; min-width: 120px;" type="text" />
+            <button class="btn secondary" onclick="loadPhotos(true)"><i class="fa-solid fa-filter"></i> Apply</button>
+            <button class="btn secondary" onclick="clearFilters()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <div class="row" style="margin-bottom: 10px; justify-content: space-between;">
+            <div class="text-sm text-muted" id="galCount">0 Photos</div>
+            <button class="btn secondary" onclick="loadPhotos(true)"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+
+          <div class="gallery-grid" id="galGrid"></div>
+
+          <div style="text-align:center; margin-top: 30px;">
+            <button class="btn primary hidden" id="btnLoadMore" onclick="loadPhotos(false, true)" style="width: 200px;">Load More Photos</button>
+            <div class="hidden" id="galLoading" style="color: #888; font-size: 14px; margin-top: 10px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: EVENTS -->
+      <div class="tab-content" id="tEvents">
+        <div class="card">
+          <div class="row" style="justify-content: space-between; margin-bottom: 20px; align-items: flex-start;">
+            <div>
+              <h3>Manage Sub-Events</h3>
+              <p class="text-sm text-muted">Organize photos into sub-events (Haldi, Reception, etc).</p>
+            </div>
+            <div id="evAddForm" style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; gap: 8px;">
+              <input id="neName" placeholder="Event Name" style="border:none; background:transparent; border-bottom:1px solid #444; border-radius:0; padding:5px; width:150px;" />
+              <input id="neDate" style="border:none; background:transparent; border-bottom:1px solid #444; border-radius:0; padding:5px;" type="date" />
+              <button class="btn primary" onclick="createNewEvent()" style="padding: 6px 16px; font-size:12px;">Add</button>
+            </div>
+          </div>
+
+          <div class="hidden" id="evEditForm" style="background: rgba(0, 230, 118, 0.05); padding: 16px; border-radius: 12px; margin: 10px 0 20px; border: 1px solid var(--primary-dim);">
+            <div class="row" style="margin-bottom: 8px;">
+              <span class="text-sm font-bold" style="color:var(--primary)">EDIT EVENT</span>
+            </div>
+            <input id="eeId" type="hidden" />
+            <div class="row">
+              <input id="eeName" placeholder="New Event Name" style="flex:2" />
+              <input id="eeDate" style="flex:1" type="date" />
+              <button class="btn primary" onclick="updateEvent()">Save Changes</button>
+              <button class="btn secondary" onclick="cancelEditEvent()">Cancel</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="styled-table">
+              <thead><tr><th>Event Name</th><th>Date</th><th>Photos</th><th>Size</th><th>Actions</th></tr></thead>
+              <tbody id="tblEvents"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: UPLOAD -->
+      <div class="tab-content" id="tUp">
+        <div class="card">
+          <div class="row" style="justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h3>Batch Photo Upload</h3>
+              <p class="text-sm text-muted">Photos queue up first. Click 'Start Upload' to process.</p>
+            </div>
+          </div>
+
+          <div class="row" style="margin: 24px 0;">
+            <div style="flex: 1; max-width: 400px;">
+              <label class="text-sm" style="display:block; margin-bottom: 6px;">Select Target Event</label>
+              <select id="upEventSel"></select>
+            </div>
+          </div>
+
+          <div ondragleave="this.style.borderColor='var(--border-color)'" ondragover="this.style.borderColor=var(--primary)" style="border: 2px dashed var(--border-color); padding: 40px; text-align: center; border-radius: 16px; position: relative; transition: 0.2s;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 32px; color: var(--text-muted); margin-bottom: 12px;"></i>
+            <h4 style="margin: 0; color: #fff;">Click to Select Photos</h4>
+            <p class="text-sm text-muted">Queue up multiple files (JPG, HEIC)</p>
+            <input accept="image/*" id="upInput" multiple onchange="queueFiles(this.files)" style="position:absolute; inset:0; opacity:0; cursor:pointer" type="file" />
+          </div>
+
+          <div class="hidden" id="uploadQueueBox" style="margin-top: 20px;">
+            <div class="row" style="justify-content:space-between; margin-bottom: 10px;">
+              <h4>Upload Queue (<span id="queueCount">0</span>)</h4>
+              <button class="btn primary" id="btnStartUpload" onclick="startUploadProcess()">Start Upload</button>
+            </div>
+            <div id="queueList" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;"></div>
+          </div>
+
+          <div class="hidden" id="upProgress" style="margin-top: 20px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
+              <span class="text-sm font-bold" id="upStatusText">Uploading...</span>
+              <span class="text-sm" id="upPct">0%</span>
+            </div>
+            <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+              <div id="upBar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.3s ease;"></div>
+            </div>
+            <div class="text-sm text-muted" id="upCountStr" style="margin-top: 10px;">Processing...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: LINKS -->
+      <div class="tab-content" id="tLink">
+        <div class="card">
+          <div class="row" style="margin-bottom: 20px;">
+            <h3>Unified Link Generator</h3>
+          </div>
+
+          <div class="row" style="gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 250px;">
+              <label class="text-sm" style="display:block; margin-bottom:6px;">Link Type</label>
+              <select id="linkType" onchange="updateLinkUI()">
+                <option value="guest">Guest Search (Face Recognition)</option>
+                <option value="client">Client Selection Gallery</option>
+                <option value="staff">Staff Upload Portal</option>
+              </select>
+            </div>
+
+            <div id="linkScopeWrapper" style="flex: 2; min-width: 200px;">
+              <label class="text-sm" id="scopeLabel" style="display:block; margin-bottom:6px;">Select Scope</label>
+              <select id="linkEventSel"></select>
+            </div>
+
+            <div style="flex: 1; min-width: 120px;">
+              <label class="text-sm" style="display:block; margin-bottom:6px;">Expiry</label>
+              <select id="linkExpiry">
+                <option value="87600">Lifetime</option>
+                <option value="168">7 Days</option>
+                <option value="24">24 Hours</option>
+                <option value="1">1 Hour</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 100px;">
+              <label class="text-sm" style="display:block; margin-bottom:6px;">Set PIN</label>
+              <input id="linkPin" placeholder="1234" />
+            </div>
+
+            <button class="btn primary" onclick="generateUnifiedLink()" style="height: 46px; min-width: 140px;">Generate</button>
+          </div>
+
+          <div class="hidden" id="linkRes" style="margin-top: 24px; background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--primary-dim);">
+            <div class="text-sm" style="color: var(--primary); font-weight: 700; margin-bottom: 8px;">GENERATED LINK</div>
+            <div class="row" style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <input id="finalLink" readonly style="border:none; background:transparent; font-family:monospace; color:var(--primary); font-size:15px; flex:1;" />
+              <button class="btn secondary" onclick="copyLink()"><i class="fa-regular fa-copy"></i></button>
+              <a class="btn primary" id="finalLinkBtn" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+          </div>
+
+          
+<hr style="border:0; border-top:1px solid #333; margin:30px 0;" />
+
+          <div class="row" style="justify-content: space-between; margin-bottom: 15px;">
+            <h3>Active Links History</h3>
+            <button class="btn secondary" onclick="renderLinkHistory()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="styled-table">
+              <thead><tr><th>Type</th><th>Created At</th><th>Expiry</th><th>PIN</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="tblLinkHistory">
+                <tr><td align="center" class="text-muted" colspan="6">No links generated yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      
+      <!-- TAB 4B: POLITICAL -->
+      <div class="tab-content" id="tPol">
+        <div class="card">
+<div class="row" style="justify-content: space-between; margin-bottom: 14px; align-items:center;">
+  <div>
+    <h3 style="margin:0;">Political Public Link Generator</h3>
+    <div class="text-sm text-muted">Search + 6 Forms (Token Based)</div>
+  </div>
+  <div class="row" style="gap:10px; align-items:center;">
+    <button class="btn secondary" onclick="openPoliticalAdminConsole()" title="All forms entries dashboard">
+      <i class="fa-solid fa-table-list"></i> Open Admin Console
+    </button>
+  </div>
+</div>
+
+<div class="row" style="gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+  <div style="flex: 2; min-width: 240px;">
+    <label class="text-sm" style="display:block; margin-bottom:6px;">Collection ID</label>
+    <input id="polCid" placeholder="e.g. COL123" />
+  </div>
+
+  <div style="flex: 2; min-width: 210px;">
+    <label class="text-sm" style="display:block; margin-bottom:6px;">Link Category</label>
+    <select id="polLinkKind" onchange="updatePoliticalLinkUI()">
+      <option value="political_search">Worker Search (Face Search)</option>
+      <option value="political_form">Public Form Link</option>
+    </select>
+  </div>
+
+  <div id="polFormWrap" style="flex: 2; min-width: 240px;">
+    <label class="text-sm" style="display:block; margin-bottom:6px;">Form Type</label>
+    <select id="polFormType">
+      <option value="visitor_form">Visitor Form</option>
+      <option value="party_attendance">Party Attendance</option>
+      <option value="president_tour">President Tour</option>
+      <option value="mandal_reporting">Mandal Reporting</option>
+      <option value="coordinator_entry">Coordinator Entry</option>
+      <option value="program_info">Program Info</option>
+    </select>
+  </div>
+
+  <div style="flex: 1; min-width: 140px;">
+    <label class="text-sm" style="display:block; margin-bottom:6px;">Valid Days</label>
+    <select id="polDays">
+      <option value="30">30</option>
+      <option value="14">14</option>
+      <option value="7">7</option>
+      <option value="1">1</option>
+      <option value="365">365</option>
+    </select>
+  </div>
+
+  <button class="btn primary" onclick="generatePoliticalPublicLink()" style="height: 46px; min-width: 170px;">Generate</button>
+</div>
+
+<div class="hidden" id="polLinkRes" style="margin-top: 18px; background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--primary-dim);">
+  <div class="text-sm" style="color: var(--primary); font-weight: 700; margin-bottom: 8px;">POLITICAL LINK</div>
+  <div class="row" style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
+    <input id="polFinalLink" readonly style="border:none; background:transparent; font-family:monospace; color:var(--primary); font-size:15px; flex:1;" />
+    <button class="btn secondary" onclick="copyPoliticalLink()" style="margin-left: 8px;"><i class="fa-regular fa-copy"></i> Copy</button>
+  </div>
+  <div class="text-sm text-muted" id="polLinkMeta" style="margin-top:10px;"></div>
+  <div class="text-sm text-muted" style="margin-top:6px;">Note: Public forms need API route without Cognito Authorizer (recommended: POST /political/public/forms).</div>
+</div>
+
+
+        </div>
+      </div>
+
+<!-- TAB 5: CLIENT SELECTIONS -->
+      <div class="tab-content" id="tClient">
+        <div class="card">
+          <div class="row" style="justify-content:space-between; margin-bottom:20px;">
+            <div>
+              <h3>Client & Guest Selections</h3>
+              <p class="text-sm text-muted">View all favorites/selections grouped by photo.</p>
+            </div>
+            <button class="btn secondary" onclick="loadClientSelections()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="styled-table">
+              <thead><tr><th>Photo</th><th>Selection Details (Who & What)</th><th>Actions</th></tr></thead>
+              <tbody id="tblSelections"><tr><td align="center" class="text-muted" colspan="3">Loading activity...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: GUEST LEADS -->
+      <div class="tab-content" id="tLeads">
+        <div class="card">
+          <div class="row" style="justify-content: space-between; margin-bottom: 20px;">
+            <h3>Guest Leads & Analytics</h3>
+            <button class="btn secondary" onclick="loadLeads()"><i class="fa-solid fa-rotate-right"></i> Refresh Data</button>
+          </div>
+
+          <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="styled-table">
+              <thead><tr><th>Guest Name</th><th>Phone Number</th><th>Activity</th><th>Actions</th></tr></thead>
+              <tbody id="tblLeads"><tr><td align="center" class="text-muted" colspan="4">Loading leads...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: SETTINGS -->
+      <div class="tab-content" id="tSettings">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;">
+          <div class="card">
+            <h3>Customization Controls</h3>
+
+            <div class="settings-group">
+              <div class="settings-title"><i class="fa-solid fa-image"></i> Visual Assets</div>
+              <label class="text-sm">Header Image (Banner)</label>
+              <div class="row" style="margin-bottom: 12px;">
+                <input id="setHeadImg" oninput="manualUpdate('setHeadImg')" placeholder="Image URL" />
+                <input hidden id="fileHeadImg" onchange="uploadAsset(this, 'setHeadImg')" type="file" />
+                <button class="btn secondary" onclick="document.getElementById('fileHeadImg').click()">Upload</button>
+              </div>
+              <label class="text-sm">Logo</label>
+              <div class="row">
+                <input id="setLogo" oninput="manualUpdate('setLogo')" placeholder="Logo URL" />
+                <input hidden id="fileLogo" onchange="uploadAsset(this, 'setLogo')" type="file" />
+                <button class="btn secondary" onclick="document.getElementById('fileLogo').click()">Upload</button>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-title"><i class="fa-solid fa-pen-nib"></i> Text & Content</div>
+              <label class="text-sm">Collection Title</label>
+              <input id="setColName" oninput="updatePreview()" style="margin-bottom: 12px;" />
+              <label class="text-sm">Welcome Message</label>
+              <textarea id="setWelcome" oninput="updatePreview()" rows="3" style="margin-bottom: 12px;"></textarea>
+              <label class="text-sm">Footer Text</label>
+              <input id="setFooter" placeholder="e.g. Photography by EventLens" />
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-title"><i class="fa-solid fa-palette"></i> Theme</div>
+              <label class="text-sm">Primary Color</label>
+              <div class="row" style="margin-bottom: 12px;">
+                <input id="setColorPicker" onchange="document.getElementById('setColor').value=this.value" style="width: 50px; height: 45px; padding: 0;" type="color" />
+                <input id="setColor" onchange="document.getElementById('setColorPicker').value=this.value" placeholder="#00e676" />
+              </div>
+              <label class="text-sm">Layout Style</label>
+              <select id="setLayout">
+                <option value="grid">Grid (Default)</option>
+                <option value="masonry">Masonry (Pinterest Style)</option>
+              </select>
+              <label class="text-sm" style="margin-top:10px; display:block;">Banner Opacity</label>
+              <div class="row">
+                <input id="setOpacity" max="0.9" min="0" oninput="document.getElementById('opacityVal').innerText=this.value" step="0.1" style="flex:1;" type="range" value="0.3" />
+                <span class="text-sm" id="opacityVal">0.3</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: right;">
+              <button class="btn primary" onclick="saveSettings()" style="width: 100%;">Save All Settings</button>
+            </div>
+          </div>
+
+          <div class="card" style="position: sticky; top: 20px; height: fit-content; text-align: center;">
+            <div class="row" style="justify-content: center; margin-bottom: 20px;">
+              <h3 style="margin: 0; margin-right: 15px;">Live Preview</h3>
+              <div style="background: #222; border-radius: 20px; padding: 4px; display: inline-flex;">
+                <button class="btn" id="btnPrevMob" onclick="setPreviewMode('mobile')" style="padding: 6px 12px; font-size: 12px; background: var(--primary); color: #000;">Mobile</button>
+                <button class="btn" id="btnPrevDesk" onclick="setPreviewMode('desktop')" style="padding: 6px 12px; font-size: 12px; background: transparent; color: #fff;">Desktop</button>
+              </div>
+            </div>
+
+            <div class="preview-frame mobile" id="previewFrame">
+              <div class="prev-header" id="prevHeader" style="background-image: url('');">
+                <div class="prev-overlay">
+                  <img class="prev-logo" id="prevLogo" src="" />
+                  <h2 class="prev-title" id="prevTitle">Event Title</h2>
+                  <p class="prev-welcome" id="prevWelcome">Welcome Message Here</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- grid -->
+      </div><!-- tSettings -->
+    </div><!-- vCol -->
+  </div><!-- mainWrap -->
+
+  <!-- ====================== SCRIPT ====================== -->
+  <script src="assets/scripts/awseventlens-single-v3__script1.js"></script>
+
+  <!-- Hidden legacy container (kept to avoid layout surprises, but unused) -->
+  <div id="photographer-list" class="hidden" style="display:none"></div>
+
+</body>
+</html>

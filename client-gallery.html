@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- FIX: Referrer policy to prevent S3 403 Errors -->
+    <meta name="referrer" content="no-referrer" />
+    <title>Event Gallery</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- ZIP Libraries (Required for Download Selection) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <link rel="stylesheet" href="assets/styles/client-gallery__style1.css">
+</head>
+<body>
+
+    <!-- NOTIFICATIONS -->
+    <div id="toast"></div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="authView">
+        <div class="login-card">
+            <h2>Gallery Access</h2>
+            <p>Please enter your access PIN</p>
+            <input type="tel" id="pinInput" class="pin-input" placeholder="••••">
+            <button class="btn-primary" onclick="tryLogin()">Unlock Gallery</button>
+        </div>
+    </div>
+
+    <!-- MAIN GALLERY INTERFACE -->
+    <div id="galleryView">
+        <!-- Hero Section -->
+        <div class="hero" id="heroSec">
+            <div class="hero-overlay"></div>
+            <div class="brand-content">
+                <img src="" id="brandLogo" class="brand-logo" style="display:none">
+                <h1 class="brand-title" id="brandName">Event Gallery</h1>
+                <p id="welcomeText" class="brand-subtitle"></p>
+            </div>
+        </div>
+
+        <!-- PEOPLE BAR (Face Grouping) -->
+        <div class="people-bar-container" id="peopleBar">
+            <div class="people-title">Top Faces in this Album</div>
+            <div class="people-scroll" id="peopleList"></div>
+        </div>
+
+        <!-- Sticky Filter Bar -->
+        <div class="sticky-header">
+            <div class="filter-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" style="color:#666"></i>
+                    <input type="text" id="textFilter" placeholder="Search tags..." onchange="applyFilters(true)">
+                </div>
+                <div class="icon-btn" onclick="openGuestSearch()" title="Find My Photos">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <div class="icon-btn" onclick="document.getElementById('dateInput').showPicker()">
+                    <i class="fa-solid fa-calendar"></i>
+                    <input type="date" id="dateInput" style="width:0; height:0; opacity:0; position:absolute;" onchange="applyFilters(true)">
+                </div>
+            </div>
+            <!-- Tabs -->
+            <div class="filter-row" style="margin-top:10px;">
+                <div class="chip active" id="filter-all" onclick="setTab('all')">All Photos</div>
+                <div class="chip" id="filter-sel" onclick="setTab('selected')">Selected</div>
+                <div class="chip" id="filter-fav" onclick="setTab('fav')">Favorites</div>
+            </div>
+        </div>
+
+        <!-- Main Photo Grid -->
+        <div class="grid" id="grid"></div>
+
+        <!-- Load More -->
+        <div class="load-more-area">
+            <button id="loadMoreBtn" class="btn-primary" style="display:none;" onclick="loadPhotos(false)">Load More</button>
+            <div id="loader" style="color:#666; display:none;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+            </div>
+        </div>
+
+        <!-- Bottom Action Bar (ZIP & Send) -->
+        <div class="submit-bar" id="submitBar">
+            <div><span style="color:var(--primary); font-weight:700" id="selCount">0</span> Selected</div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" onclick="downloadZip()" style="padding: 8px 16px; font-size:12px; background: #333; border: 1px solid #555; color: #fff;">
+                    <i class="fa-solid fa-download"></i> ZIP
+                </button>
+                <button class="btn-primary" onclick="submitFinal()" style="padding: 8px 20px; font-size:12px;">
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX (Fullscreen View) -->
+    <div id="lightbox">
+        <div class="lb-header">
+            <div style="padding-left:20px;">
+                <!-- Slideshow Play Button -->
+                <i class="fa-solid fa-play lb-play-btn" id="slideshowBtn" onclick="toggleSlideshow()" title="Play Slideshow"></i>
+            </div>
+            
+            <div style="display:flex; gap:20px; padding-right:20px;">
+                <span style="color:#fff; font-size:14px; margin-top:5px;" id="lbCount">1 / 100</span>
+                <i class="fa-solid fa-xmark" onclick="closeLightbox()" style="color:#fff; font-size:24px; cursor:pointer;"></i>
+            </div>
+        </div>
+        
+        <div class="lb-main">
+            <i class="fa-solid fa-chevron-left" onclick="navLb(-1)" style="position:absolute; left:10px; color:#fff; font-size:24px; padding:20px; cursor:pointer; z-index:5;"></i>
+            <img src="" id="lbImg" class="lb-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDQ0IiBzdHJva2Utd2lkdGg9IjIiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIi8+PGNpcmNsZSBjeD0iOC41IiBjeT0iOC41IiByPSIxLjUiLz48cG9seWxpbmUgcG9pbnRzPSIyMSAxNSAxNiAxMCA1IDIxIi8+PC9zdmc+'">
+            <div class="lb-nav next" onclick="navLb(1)"><i class="fa-solid fa-chevron-right"></i></div>
+            <i class="fa-solid fa-chevron-right" onclick="navLb(1)" style="position:absolute; right:10px; color:#fff; font-size:24px; padding:20px; cursor:pointer; z-index:5;"></i>
+        </div>
+
+        <div class="lb-footer">
+            <button class="lb-action" id="lbSel" onclick="toggleAction('selected')">
+                <i class="fa-solid fa-circle-check"></i> <span>Select</span>
+            </button>
+            <button class="lb-action" id="lbFav" onclick="toggleAction('fav')">
+                <i class="fa-solid fa-heart"></i> <span>Favorite</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script src="assets/scripts/client-gallery__script1.js"></script>
+</body>
+</html>

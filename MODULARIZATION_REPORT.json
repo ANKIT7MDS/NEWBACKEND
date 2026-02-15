@@ -1,0 +1,117 @@
+{
+  "generated_at": "2026-02-15T13:27:22.085509Z",
+  "pages": [
+    {
+      "file": "staff-upload.html",
+      "extracted_styles": [
+        "staff-upload__style1.css"
+      ],
+      "extracted_scripts": [
+        "staff-upload__script1.js"
+      ]
+    },
+    {
+      "file": "awseventlens-single-v3.html",
+      "extracted_styles": [
+        "awseventlens-single-v3__style1.css"
+      ],
+      "extracted_scripts": [
+        "awseventlens-single-v3__script1.js"
+      ]
+    },
+    {
+      "file": "client-gallery.html",
+      "extracted_styles": [
+        "client-gallery__style1.css"
+      ],
+      "extracted_scripts": [
+        "client-gallery__script1.js"
+      ]
+    },
+    {
+      "file": "index.html",
+      "extracted_styles": [
+        "index__style1.css",
+        "index__style2.css"
+      ],
+      "extracted_scripts": [
+        "index__script1.js"
+      ]
+    },
+    {
+      "file": "political-admin-console.html",
+      "extracted_styles": [
+        "political-admin-console__style1.css",
+        "political-admin-console__style2.css"
+      ],
+      "extracted_scripts": [
+        "political-admin-console__script1.js"
+      ]
+    },
+    {
+      "file": "political-search.html",
+      "extracted_styles": [
+        "political-search__style1.css"
+      ],
+      "extracted_scripts": [
+        "political-search__script1.js",
+        "political-search__script2.js",
+        "political-search__script3.js"
+      ]
+    },
+    {
+      "file": "political_visitor_form.html",
+      "extracted_styles": [
+        "political_visitor_form__style1.css"
+      ],
+      "extracted_scripts": [
+        "political_visitor_form__script1.js"
+      ]
+    },
+    {
+      "file": "political_coordinator_entry_form.html",
+      "extracted_styles": [
+        "political_coordinator_entry_form__style1.css"
+      ],
+      "extracted_scripts": [
+        "political_coordinator_entry_form__script1.js"
+      ]
+    },
+    {
+      "file": "political_party_attendance_form.html",
+      "extracted_styles": [
+        "political_party_attendance_form__style1.css"
+      ],
+      "extracted_scripts": [
+        "political_party_attendance_form__script1.js"
+      ]
+    },
+    {
+      "file": "political_president_tour_form.html",
+      "extracted_styles": [
+        "political_president_tour_form__style1.css"
+      ],
+      "extracted_scripts": [
+        "political_president_tour_form__script1.js"
+      ]
+    },
+    {
+      "file": "political_mandal_reporting_form.html",
+      "extracted_styles": [
+        "political_mandal_reporting_form__style1.css"
+      ],
+      "extracted_scripts": [
+        "political_mandal_reporting_form__script1.js"
+      ]
+    },
+    {
+      "file": "political_program_info_form.html",
+      "extracted_styles": [
+        "political_program_info_form__style1.css"
+      ],
+      "extracted_scripts": [
+        "political_program_info_form__script1.js"
+      ]
+    }
+  ]
+}

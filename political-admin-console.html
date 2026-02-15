@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- EventLens admin patched 2026-02-09 06:13:15 -->
+<title>Political Admin Console Pro - EventLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: { 
+            brand: { 500: '#f97316', 600: '#ea580c' }, 
+            dark: { 800: '#1e293b', 900: '#0f172a', 950: '#020617' } 
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s ease-out forwards',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/styles/political-admin-console__style1.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+</head>
+
+<body class="min-h-screen font-sans selection:bg-orange-500/30">
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Top bar -->
+  <nav class="sticky top-0 z-50 glass-header h-16">
+    <div class="max-w-[1600px] mx-auto px-4 h-full">
+      <div class="flex items-center justify-between h-full gap-4">
+        
+        <!-- Logo Area -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20 ring-1 ring-white/10">
+            <i class="fa-solid fa-om"></i>
+          </div>
+          <div>
+            <div class="text-white font-extrabold tracking-tight text-lg leading-none">EventLens <span class="text-orange-500">Pro</span></div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Political Admin Console</div>
+          </div>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center gap-3">
+          <!-- CID Display -->
+          <div id="cidPill" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-800 text-xs font-mono text-slate-300">
+            <i class="fa-solid fa-database text-emerald-500"></i>
+            <span id="cidVal" class="font-bold text-white tracking-wide"></span>
+          </div>
+
+          <div class="h-6 w-px bg-slate-800 mx-1"></div>
+
+          <!-- AUTH BUTTON -->
+          <button id="btnAuth" class="group px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-orange-400 hover:text-orange-300 transition-colors border border-transparent hover:border-orange-500/30" title="Update Token">
+            <i class="fa-solid fa-key text-sm"></i>
+          </button>
+
+          <button id="btnReload" class="group px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border border-transparent hover:border-slate-700">
+            <i class="fa-solid fa-rotate-right text-sm group-hover:rotate-180 transition-transform duration-500"></i>
+          </button>
+
+          <button id="btnSave" class="group relative px-5 py-2 rounded-lg bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white text-sm font-bold shadow-lg shadow-orange-600/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 overflow-hidden">
+            <span class="relative z-10 flex items-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </span>
+            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Layout -->
+  <main class="max-w-[1600px] mx-auto px-4 py-6">
+    <div class="grid lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Sidebar -->
+      <aside class="lg:col-span-3 space-y-6 sticky top-24">
+        
+        <!-- Context Card -->
+        <div class="glass-panel rounded-2xl p-5 relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <i class="fa-solid fa-chess-rook text-6xl text-orange-500"></i>
+          </div>
+          
+          <div class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-4">Current Context</div>
+          
+          <div class="space-y-4 relative z-10">
+            <div>
+              <label class="text-[11px] font-bold text-slate-400 uppercase">Collection ID</label>
+              <div class="mt-1 flex gap-2">
+                <input id="cidInput" class="input-field w-full rounded-lg px-3 py-2 text-xs font-mono" placeholder="Enter CID..." />
+                <button id="btnApplyCid" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition-colors">
+                  <i class="fa-solid fa-check"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-bold text-slate-400 uppercase">Edit Target</label>
+              <div class="relative mt-1">
+                <select id="targetFormSel" class="input-field w-full rounded-lg px-3 py-2.5 text-sm appearance-none cursor-pointer">
+                  <option value="__defaults__">📡 Defaults (All Forms)</option>
+                  <option disabled>──────────────</option>
+                  <option value="visitor_form">📝 Visitor Form</option>
+                  <option value="party_attendance">🚩 Party Attendance</option>
+                  <option value="president_tour">🚙 President Tour</option>
+                  <option value="mandal_reporting">📊 कार्यक्रम रिपोर्टिंग</option>
+                  <option value="coordinator">👔 Coordinator</option>
+                  <option value="program_info">ℹ️ Program Info</option>
+                </select>
+                <div class="absolute right-3 top-3 text-slate-400 pointer-events-none text-xs">
+                  <i class="fa-solid fa-chevron-down"></i>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-2 leading-relaxed">
+                Changes apply to the selected form only unless "Defaults" is chosen.
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 rounded-lg bg-slate-950/40 border border-slate-800 p-3">
+              <div>
+                <div class="text-xs font-bold text-white">Live Preview</div>
+                <div class="text-[10px] text-slate-500">Real-time branding update</div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input id="livePreviewToggle" type="checkbox" class="sr-only peer" checked>
+                <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-orange-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="glass-panel rounded-2xl p-2 space-y-1">
+          <button class="nav-btn active w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-300" data-tab="branding">
+            <span class="w-6 h-6 rounded bg-slate-800/50 flex items-center justify-center text-xs"><i class="fa-solid fa-palette text-orange-400"></i></span>
+            Branding & Preview
+          </button>
+          <button class="nav-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-300" data-tab="programs">
+            <span class="w-6 h-6 rounded bg-slate-800/50 flex items-center justify-center text-xs"><i class="fa-solid fa-list-check text-blue-400"></i></span>
+            Program Names
+          </button>
+          <button class="nav-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-300" data-tab="levels">
+            <span class="w-6 h-6 rounded bg-slate-800/50 flex items-center justify-center text-xs"><i class="fa-solid fa-lock text-rose-400"></i></span>
+            Level Locks
+          </button>
+          <button class="nav-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-300" data-tab="data">
+            <span class="w-6 h-6 rounded bg-slate-800/50 flex items-center justify-center text-xs"><i class="fa-solid fa-table text-emerald-400"></i></span>
+            Data Records
+          </button>
+          <button class="nav-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-300" data-tab="analytics">
+            <span class="w-6 h-6 rounded bg-slate-800/50 flex items-center justify-center text-xs"><i class="fa-solid fa-chart-pie text-purple-400"></i></span>
+            Analytics
+          </button>
+          <button class="nav-btn w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-300" data-tab="backend">
+            <span class="w-6 h-6 rounded bg-slate-800/50 flex items-center justify-center text-xs"><i class="fa-solid fa-plug text-yellow-400"></i></span>
+            API Config
+          </button>
+        </nav>
+
+        <div class="text-center">
+          <p class="text-[10px] text-slate-600">v2.9.0 Pro • EventLens System</p>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div class="lg:col-span-9 min-h-[80vh]">
+        
+        <!-- TAB: Branding -->
+        <section id="tab-branding" class="tab-content animate-fade-in">
+          <div class="grid lg:grid-cols-12 gap-6">
+            
+            <!-- Editor Column -->
+            <div class="lg:col-span-7 space-y-6">
+              <div class="glass-panel rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                   <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                     <i class="fa-solid fa-pen-nib text-orange-500"></i> Appearance
+                   </h2>
+                   <div class="flex gap-2">
+                      <button id="btnResetBrand" class="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-lg transition-colors">Reset</button>
+                      <button id="btnCopyToDefaults" class="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 rounded-lg transition-colors">Copy to All</button>
+                   </div>
+                </div>
+
+                <!-- Text Inputs -->
+                <div class="space-y-4">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div class="group">
+                      <label class="text-xs font-bold text-slate-400 ml-1 mb-1 block group-focus-within:text-orange-500 transition-colors">Title / Header</label>
+                      <input id="b_title" class="input-field w-full rounded-xl px-4 py-3 text-sm font-bold" placeholder="e.g. भाजपा कार्यालय मंदसौर" />
+                    </div>
+                    <div class="group">
+                      <label class="text-xs font-bold text-slate-400 ml-1 mb-1 block group-focus-within:text-orange-500 transition-colors">Subtitle</label>
+                      <input id="b_subtitle" class="input-field w-full rounded-xl px-4 py-3 text-sm" placeholder="e.g. स्वागत" />
+                    </div>
+                  </div>
+                  <div class="group">
+                    <label class="text-xs font-bold text-slate-400 ml-1 mb-1 block group-focus-within:text-orange-500 transition-colors">Tagline</label>
+                    <input id="b_tagline" class="input-field w-full rounded-xl px-4 py-3 text-sm" placeholder="e.g. सेवा • संगठन • समर्पण" />
+                  </div>
+                </div>
+
+                <!-- Colors -->
+                <div class="mt-6 p-4 bg-slate-950/30 rounded-xl border border-slate-800/50">
+                  <label class="text-xs font-bold text-slate-400 block mb-3">Gradient Theme</label>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <input id="b_c1" type="color" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border-0 p-0" />
+                        <div class="text-xs font-mono text-slate-400">Primary</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <input id="b_c2" type="color" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border-0 p-0" />
+                        <div class="text-xs font-mono text-slate-400">Secondary</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Assets Upload -->
+              <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Assets</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Logo Upload -->
+                  <div class="relative group">
+                    <input id="file_logo" type="file" accept="image/*" class="hidden" />
+                    <div class="aspect-square rounded-xl bg-slate-900/50 border-2 border-dashed border-slate-700 hover:border-orange-500 hover:bg-slate-800/50 transition-all cursor-pointer flex flex-col items-center justify-center p-4 text-center overflow-hidden" onclick="document.getElementById('file_logo').click()">
+                      <img id="prev_logo" class="absolute inset-0 w-full h-full object-contain p-2 hidden z-10" />
+                      <i id="icon_logo" class="fa-solid fa-image text-2xl text-slate-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                      <span class="text-[10px] font-bold text-slate-400 group-hover:text-white">Upload Logo</span>
+                    </div>
+                    <button class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100" data-clear="logo"><i class="fa-solid fa-xmark text-xs"></i></button>
+                    <div id="name_logo" class="text-[10px] text-slate-500 mt-2 truncate text-center">No file</div>
+                  </div>
+
+                  <!-- Header Upload -->
+                  <div class="relative group">
+                    <input id="file_header" type="file" accept="image/*" class="hidden" />
+                    <div class="aspect-square rounded-xl bg-slate-900/50 border-2 border-dashed border-slate-700 hover:border-orange-500 hover:bg-slate-800/50 transition-all cursor-pointer flex flex-col items-center justify-center p-4 text-center overflow-hidden" onclick="document.getElementById('file_header').click()">
+                      <img id="prev_header" class="absolute inset-0 w-full h-full object-cover hidden z-10 opacity-60" />
+                      <i id="icon_header" class="fa-solid fa-panorama text-2xl text-slate-500 mb-2 group-hover:scale-110 transition-transform z-0"></i>
+                      <span class="text-[10px] font-bold text-slate-400 group-hover:text-white z-20 relative">Upload Header</span>
+                    </div>
+                    <button class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100" data-clear="header"><i class="fa-solid fa-xmark text-xs"></i></button>
+                    <div id="name_header" class="text-[10px] text-slate-500 mt-2 truncate text-center">No file</div>
+                  </div>
+
+                  <!-- BG Upload -->
+                  <div class="relative group">
+                    <input id="file_bg" type="file" accept="image/*" class="hidden" />
+                    <div class="aspect-square rounded-xl bg-slate-900/50 border-2 border-dashed border-slate-700 hover:border-orange-500 hover:bg-slate-800/50 transition-all cursor-pointer flex flex-col items-center justify-center p-4 text-center overflow-hidden" onclick="document.getElementById('file_bg').click()">
+                      <img id="prev_bg" class="absolute inset-0 w-full h-full object-cover hidden z-10 opacity-60" />
+                      <i id="icon_bg" class="fa-solid fa-mountain-sun text-2xl text-slate-500 mb-2 group-hover:scale-110 transition-transform z-0"></i>
+                      <span class="text-[10px] font-bold text-slate-400 group-hover:text-white z-20 relative">Upload BG</span>
+                    </div>
+                    <button class="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100" data-clear="bg"><i class="fa-solid fa-xmark text-xs"></i></button>
+                    <div id="name_bg" class="text-[10px] text-slate-500 mt-2 truncate text-center">No file</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Column -->
+            <div class="lg:col-span-5">
+              <div class="sticky top-28">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Mobile Preview</h3>
+                  <div class="flex gap-2">
+                     <button id="btnLoadFormPreview" class="px-3 py-1 text-xs rounded-full bg-orange-600 hover:bg-orange-500 text-white font-bold transition-colors"><i class="fa-solid fa-rotate mr-1"></i> Refresh</button>
+                     <button id="btnOpenFormPreview" class="px-3 py-1 text-xs rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition-colors"><i class="fa-solid fa-up-right-from-square"></i></button>
+                  </div>
+                </div>
+
+
+                <div id="previewTabs" class="mt-3 flex flex-wrap gap-2"></div>
+                <!-- Phone Mockup Container -->
+                <div class="flex justify-center">
+                  <div class="phone-mockup w-[320px] h-[640px] bg-white">
+                    <iframe id="formPreviewIframe" class="w-full h-full bg-white border-0"></iframe>
+                    
+                    <!-- Fallback/Overlay for branding preview (JS controlled opacity) -->
+                    <div id="customPreviewOverlay" class="absolute inset-0 bg-slate-900 pointer-events-none opacity-0 transition-opacity duration-300 z-20 flex flex-col">
+                       <!-- This overlay is just for quick color feedback if iframe is slow -->
+                       <div id="previewHeaderBar" class="h-1 w-full bg-orange-500"></div>
+                       <div id="previewBg" class="flex-1 bg-cover bg-center relative">
+                         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+                         <div class="relative p-6 flex flex-col items-center justify-center h-full text-center">
+                            <div id="previewHeaderImgWrap" class="w-full h-32 rounded-lg overflow-hidden mb-4 hidden shadow-lg">
+                               <img id="previewHeaderImg" class="w-full h-full object-cover">
+                            </div>
+                            <img id="previewLogo" class="w-20 h-20 rounded-full object-cover border-4 border-white/10 mb-4 hidden shadow-2xl">
+                            <i id="previewLogoIcon" class="fa-solid fa-bolt text-4xl text-orange-500 mb-4"></i>
+                            
+                            <h2 id="previewTitle" class="text-2xl font-bold text-white mb-1">Title</h2>
+                            <p id="previewSubtitle" class="text-sm text-slate-300">Subtitle</p>
+                            <div class="mt-6 flex gap-2 justify-center">
+                               <div id="sw1" class="w-4 h-4 rounded-full bg-orange-500"></div>
+                               <div id="sw2" class="w-4 h-4 rounded-full bg-red-500"></div>
+                            </div>
+                         </div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                   <div class="inline-block px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-500 font-mono">
+                     <span id="formPreviewUrlTxt" class="max-w-[200px] truncate block">...</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        
+          <div class="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="text-sm font-bold text-slate-300">All Forms Live Preview</div>
+                <div class="text-xs text-slate-500 mt-1">हर फॉर्म का प्रीव्यू यहाँ दिखेगा। किसी भी कार्ड पर क्लिक करके उस फॉर्म को चुनें।</div>
+              </div>
+              <button id="btnRefreshSignedUrls" class="px-3 py-2 text-xs rounded-lg bg-white/10 hover:bg-white/15">Refresh Preview</button>
+            </div>
+            <div id="allFormsGrid" style="display:none" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+
+        </section>
+
+        <!-- TAB: Programs -->
+        <section id="tab-programs" class="tab-content hidden animate-fade-in space-y-6">
+          <div class="glass-panel rounded-2xl p-6">
+             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                   <h2 class="text-xl font-bold text-white">Program Management</h2>
+                   <p class="text-sm text-slate-400">Manage the list of programs available in dropdowns.</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-900/50 p-1 rounded-lg border border-slate-800">
+                   <span class="text-xs font-bold text-slate-400 px-2">Mode:</span>
+                   <select id="progScopeSel" class="bg-transparent text-xs text-white font-bold py-1 pr-2 outline-none">
+                      <option value="current">Current Form Only</option>
+                      <option value="defaults">Defaults (Global)</option>
+                   </select>
+                </div>
+             </div>
+
+             <div class="flex gap-2 mb-8">
+                <input id="progInput" class="input-field flex-1 rounded-xl px-4 py-3 text-sm" placeholder="Type new program name (e.g. बूथ विजय अभियान)..." />
+                <button id="btnAddProg" class="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold shadow-lg shadow-orange-600/20 transition-all active:scale-95">
+                   <i class="fa-solid fa-plus"></i> Add
+                </button>
+             </div>
+
+             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3" id="progList">
+                <!-- Program items injected here -->
+             </div>
+          </div>
+        </section>
+
+        <!-- TAB: Levels -->
+        <section id="tab-levels" class="tab-content hidden animate-fade-in space-y-6">
+          <div class="glass-panel rounded-2xl p-6">
+             <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">Hierarchical Locks</h2>
+                <select id="levelScopeSel" class="input-field rounded-lg px-3 py-1.5 text-xs">
+                   <option value="current">Current Form</option>
+                   <option value="defaults">Defaults</option>
+                </select>
+             </div>
+             
+             <div class="grid md:grid-cols-3 gap-6">
+                <div class="p-5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 transition-colors">
+                   <div class="flex items-center gap-3 mb-4">
+                      <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="fa-solid fa-sitemap"></i></div>
+                      <div class="font-bold text-white text-sm">Reporting Level</div>
+                   </div>
+                   <select id="lvl_mandal_reporting" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+                      <option value="">🔓 Unlocked</option>
+                      <option value="district">District Fixed</option>
+                      <option value="vidhansabha">Vidhan Sabha Fixed</option>
+                      <option value="mandal">Mandal Fixed</option>
+                   </select>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 transition-colors">
+                   <div class="flex items-center gap-3 mb-4">
+                      <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center"><i class="fa-solid fa-user-tie"></i></div>
+                      <div class="font-bold text-white text-sm">Coordinator</div>
+                   </div>
+                   <select id="lvl_coordinator" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+                      <option value="">🔓 Unlocked</option>
+                      <option value="district">District Fixed</option>
+                      <option value="vidhansabha">Vidhan Sabha Fixed</option>
+                      <option value="mandal">Mandal Fixed</option>
+                   </select>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 transition-colors">
+                   <div class="flex items-center gap-3 mb-4">
+                      <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-info"></i></div>
+                      <div class="font-bold text-white text-sm">Program Info</div>
+                   </div>
+                   <select id="lvl_program_info" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+                      <option value="">🔓 Unlocked</option>
+                      <option value="district">District Fixed</option>
+                      <option value="vidhansabha">Vidhan Sabha Fixed</option>
+                      <option value="mandal">Mandal Fixed</option>
+                   </select>
+                </div>
+             </div>
+          </div>
+        </section>
+
+        <!-- TAB: Data -->
+        <section id="tab-data" class="tab-content hidden animate-fade-in space-y-6">
+          <div class="glass-panel rounded-2xl p-6">
+             <!-- Filters -->
+             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                <div class="col-span-2 lg:col-span-2">
+                   <input id="dataSearch" class="input-field w-full rounded-xl px-4 py-2.5 text-sm" placeholder="Search name, mobile..." />
+                </div>
+                <div class="col-span-1 lg:col-span-1">
+                   <select id="dataFormSel" class="input-field w-full rounded-xl px-3 py-2.5 text-sm">
+                      <option value="__all__">All Forms</option>
+                      <option value="visitor_form">Visitor</option>
+                      <option value="party_attendance">Attendance</option>
+                      <option value="president_tour">Tour</option>
+                      <option value="mandal_reporting">Reporting</option>
+                      <option value="coordinator">Coordinator</option>
+                      <option value="program_info">Program Info</option>
+                   </select>
+                </div>
+                <div class="col-span-1">
+                   <input id="dateFrom" type="date" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div class="col-span-1">
+                   <input id="dateTo" type="date" class="input-field w-full rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div class="col-span-1">
+                   <button id="btnApplyFilter" class="w-full h-full rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-colors border border-slate-700">Filter</button>
+                </div>
+             </div>
+
+             <!-- Stats -->
+             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                   <div class="text-[10px] text-slate-500 font-bold uppercase">Total Entries</div>
+                   <div id="kpiTotal" class="text-2xl font-extrabold text-white mt-1">0</div>
+                </div>
+                <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                   <div class="text-[10px] text-slate-500 font-bold uppercase">Today</div>
+                   <div id="kpiToday" class="text-2xl font-extrabold text-orange-500 mt-1">0</div>
+                </div>
+                <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                   <div class="text-[10px] text-slate-500 font-bold uppercase">Unique Mobiles</div>
+                   <div id="kpiUnique" class="text-2xl font-extrabold text-blue-400 mt-1">0</div>
+                </div>
+                <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                    <div class="grid grid-cols-2 gap-2">
+                       <select id="filterFormType" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                          <option value="">All Forms</option>
+                          <option value="visitor_form">Visitor</option>
+                          <option value="party_attendance">Party Attendance</option>
+                          <option value="program_info">Program Info</option>
+                          <option value="president_tour">President Tour</option>
+                          <option value="mandal_reporting">Mandal Reporting</option>
+                          <option value="coordinator">Coordinator</option>
+                       </select>
+                       <select id="filterDistrict" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                          <option value="">All Districts</option>
+                       </select>
+                       <select id="filterAssembly" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                          <option value="">All Assemblies</option>
+                       </select>
+                       <select id="filterMandal" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                          <option value="">All Mandals</option>
+                       </select>
+                       <select id="filterProgram" class="col-span-2 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                          <option value="">All Programs</option>
+                       </select>
+                    </div>
+
+                    <div class="flex gap-2 mt-3">
+                       <button id="btnLoadData" class="flex-1 py-1.5 rounded-lg bg-orange-600/20 text-orange-500 hover:bg-orange-600 hover:text-white text-xs font-bold transition-all">Load</button>
+                       <button id="btnExportCsv" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-all"><i class="fa-solid fa-download"></i> CSV</button>
+                    </div>
+                 </div>
+             </div>
+
+             <!-- Table -->
+             <div class="rounded-xl border border-slate-800 overflow-hidden bg-slate-950/20">
+                <div class="overflow-x-auto">
+                   <table class="w-full text-sm text-left">
+                      <thead class="bg-slate-900/80 text-xs uppercase text-slate-400 font-bold">
+                         <tr>
+                            <th class="px-4 py-3 cursor-pointer hover:text-white" data-sort="created_at">Time <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="px-4 py-3">Form</th>
+                            <th class="px-4 py-3 cursor-pointer hover:text-white" data-sort="mobile">Mobile <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="px-4 py-3">Name</th>
+                            <th class="px-4 py-3 cursor-pointer hover:text-white" data-sort="district">District <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="px-4 py-3">Action</th>
+                         </tr>
+                      </thead>
+                      <tbody id="dataTbody" class="divide-y divide-slate-800 text-slate-300">
+                         <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500 italic">Click "Load" to fetch data</td></tr>
+                      </tbody>
+                   </table>
+                </div>
+                <div class="bg-slate-900/80 px-4 py-2 flex justify-between items-center border-t border-slate-800">
+                   <div class="text-xs text-slate-500">Showing <span id="loadedCount" class="text-white font-bold">0</span> records</div>
+                   <div class="flex gap-2">
+                      <button id="btnPrevPage" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-white disabled:opacity-50">Prev</button>
+                      <button id="btnNextPage" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-white disabled:opacity-50">Next</button>
+                   </div>
+                </div>
+             </div>
+          </div>
+        </section>
+
+        <!-- TAB: Analytics -->
+        <section id="tab-analytics" class="tab-content hidden animate-fade-in space-y-6">
+          <div class="flex justify-end">
+             <button id="btnRefreshCharts" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors border border-slate-700"><i class="fa-solid fa-rotate mr-2"></i>Refresh Charts</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6">
+             <div class="glass-panel p-5 rounded-2xl">
+                <h4 class="text-sm font-bold text-slate-300 mb-4">Submission Trends (14 Days)</h4>
+                <div class="h-[250px]"><canvas id="chartByDay"></canvas></div>
+             </div>
+             <div class="glass-panel p-5 rounded-2xl">
+                <h4 class="text-sm font-bold text-slate-300 mb-4">By Form Type</h4>
+                <div class="h-[250px]"><canvas id="chartByForm"></canvas></div>
+             </div>
+             <div class="glass-panel p-5 rounded-2xl md:col-span-2">
+                <h4 class="text-sm font-bold text-slate-300 mb-4">Top Districts</h4>
+                <div class="h-[200px]"><canvas id="chartDistrict"></canvas></div>
+             </div>
+          </div>
+        </section>
+        
+        <!-- TAB: Backend Info -->
+        <section id="tab-backend" class="tab-content hidden animate-fade-in">
+           <div class="glass-panel rounded-2xl p-8 text-center">
+              <div class="inline-flex w-16 h-16 rounded-full bg-slate-800 items-center justify-center mb-4">
+                 <i class="fa-solid fa-server text-2xl text-slate-400"></i>
+              </div>
+              <h2 class="text-xl font-bold text-white">Backend Configuration</h2>
+              <p class="text-sm text-slate-400 mt-2 max-w-lg mx-auto">This console connects to the EventLens AWS Lambda infrastructure. Ensure your user account has `political_admin` claims.</p>
+              
+              <div class="mt-8 grid gap-4 max-w-2xl mx-auto text-left">
+                 <div class="bg-slate-950/50 rounded-lg p-4 border border-slate-800 font-mono text-xs text-slate-300">
+                    <span class="text-orange-500">POST</span> /prod/political/forms
+                 </div>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-900/30 p-3 rounded border border-slate-800">
+                       <div class="text-[10px] text-slate-500 uppercase font-bold">Action</div>
+                       <div class="text-sm text-white font-mono mt-1">admin_save_config</div>
+                    </div>
+                    <div class="bg-slate-900/30 p-3 rounded border border-slate-800">
+                        <div class="text-[10px] text-slate-500 uppercase font-bold">Action</div>
+                        <div class="text-sm text-white font-mono mt-1">admin_list_entries</div>
+                     </div>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center z-[60] backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/80" id="modalBackdrop"></div>
+    <div class="relative max-w-2xl w-[90%] rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden animate-slide-up">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
+        <div>
+          <h3 class="text-lg font-bold text-white">Data Details</h3>
+          <div id="modalMeta" class="text-xs text-slate-400 font-mono mt-1">ID: ...</div>
+        </div>
+        <button id="btnCloseModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-0 overflow-auto max-h-[70vh]">
+        <pre id="modalJson" class="text-xs text-green-400 bg-[#0d1117] p-6 font-mono overflow-auto"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl">
+      <h3 class="text-lg font-bold text-white mb-2">Update Access Token</h3>
+      <p class="text-xs text-slate-400 mb-4">Your session has expired or the token is invalid. Please paste a new ID Token below.</p>
+      <textarea id="authTokenInput" class="w-full h-24 bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs text-slate-300 font-mono mb-4 focus:border-orange-500 outline-none" placeholder="Paste id_token here..."></textarea>
+      <div class="flex justify-end gap-3">
+        <button id="btnCancelAuth" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800">Cancel</button>
+        <button id="btnSaveAuth" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-orange-600 hover:bg-orange-500">Save & Reload</button>
+      </div>
+    </div>
+  </div>
+
+<script src="assets/scripts/political-admin-console__script1.js"></script>
+
+<!-- Cropper Modal -->
+<div id="cropModal" class="fixed inset-0 z-[9999] hidden">
+  <div class="absolute inset-0 bg-black/70"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl glass-panel rounded-2xl border border-slate-700 overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="text-sm font-extrabold text-white">Image Fit / Crop</div>
+          <div id="cropHint" class="text-xs text-slate-400 mt-0.5">Drag to move • Scroll / pinch to zoom</div>
+        </div>
+        <button id="btnCropClose" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <div class="lg:col-span-4">
+            <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/30">
+              <img id="cropImage" class="max-h-[62vh] w-full object-contain" />
+            </div>
+          </div>
+          <div class="lg:col-span-1 space-y-3">
+            <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Tools</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btnZoomIn" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold">Zoom +</button>
+              <button id="btnZoomOut" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold">Zoom −</button>
+              <button id="btnMoveLeft" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold"><i class="fa-solid fa-arrow-left"></i></button>
+              <button id="btnMoveRight" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold"><i class="fa-solid fa-arrow-right"></i></button>
+              <button id="btnMoveUp" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold"><i class="fa-solid fa-arrow-up"></i></button>
+              <button id="btnMoveDown" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold"><i class="fa-solid fa-arrow-down"></i></button>
+            </div>
+
+            <div class="mt-2">
+              <div class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Aspect</div>
+              <select id="cropAspect" class="input-field w-full rounded-xl px-3 py-2 text-sm">
+                <option value="preset">Preset</option>
+                <option value="free">Free</option>
+              </select>
+              <div class="text-[11px] text-slate-400 mt-1">Preset: Logo = Square • Header = Wide • BG = 16:9</div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800">
+              <button id="btnCropApply" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-extrabold">Apply</button>
+              <button id="btnCropCancel" class="w-full mt-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

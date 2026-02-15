@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>President Tour Form - EventLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/styles/political_president_tour_form__style1.css">
+</head>
+    <body class="min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="w-full max-w-lg glass rounded-2xl p-6 relative overflow-hidden transition-all duration-500" id="main-container">
+    <div class="absolute top-0 left-0 w-full h-1 brand-bg"></div>
+
+    <div id="header-image" class="hidden w-full h-24 rounded-xl mb-4 bg-slate-800/40 border border-white/5 overflow-hidden bg-cover bg-center"></div>
+
+    <div class="text-center mb-6" id="form-header">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 text-orange-500 mb-3 overflow-hidden border border-white/10">
+            <i id="default-icon" class="fa-solid fa-route text-2xl"></i>
+            <img id="custom-logo" src="" class="w-full h-full object-cover hidden" alt="logo">
+        </div>
+        <h1 id="org-name" class="text-2xl font-extrabold brand-text">प्रेसिडेंट टूर फॉर्म</h1>
+        <p id="org-subtitle" class="text-slate-300/80 text-xs mt-1">President Tour</p>
+        <p id="org-tagline" class="text-slate-400 text-[11px] mt-2 hidden"></p>
+    </div>
+
+      <form id="f" class="space-y-4">
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">कार्यक्रम का स्तर (Level)</label>
+            <div class="relative">
+              <select id="program_level" class="w-full rounded-lg px-3 py-2.5 text-sm input-field appearance-none" required>
+                <option value="">— Level चुनें —</option>
+                <option value="जिला">जिला</option>
+                <option value="विधानसभा">विधानसभा</option>
+                <option value="मंडल">मंडल</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1">Level select करते ही नीचे के dropdown लॉक/अनलॉक होंगे।</div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">कार्यक्रम का प्रकार</label>
+            <input type="text" id="program_type" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="उदा: प्रवास, बैठक, कार्यशाला" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300/80 mb-1">कार्यक्रम का नाम</label>
+          <input type="text" id="program_name" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="यह backend से नहीं आएगा" required>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">जिला</label>
+            <div class="relative">
+              <select id="district" class="w-full rounded-lg px-3 py-2.5 text-sm input-field appearance-none" required>
+                <option value="">— जिला चुनें —</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">विधानसभा</label>
+            <div class="relative">
+              <select id="vidhansabha" class="w-full rounded-lg px-3 py-2.5 text-sm input-field appearance-none" required>
+                <option value="">— विधानसभा चुनें —</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">मंडल</label>
+            <div class="relative">
+              <select id="mandal" class="w-full rounded-lg px-3 py-2.5 text-sm input-field appearance-none" required>
+                <option value="">— मंडल चुनें —</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">दिनांक</label>
+            <input type="date" id="tour_date" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" required>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300/80 mb-1">स्थान</label>
+            <input type="text" id="tour_location" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="स्थान" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300/80 mb-1">कुल उपस्थिति</label>
+          <input type="number" id="total_attendance" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="उदा: 250" min="0">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300/80 mb-1">अन्य प्रमुख वक्ता</label>
+          <input type="text" id="other_speakers" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" placeholder="नाम कॉमा से अलग करें">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300/80 mb-1">कार्यक्रम की संबंध में जानकारी</label>
+          <textarea id="program_details" class="w-full rounded-lg px-3 py-2.5 text-sm input-field min-h-[110px]" placeholder="कार्यक्रम की जानकारी"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300/80 mb-1">कार्यक्रम के फोटोस</label>
+          <input type="file" id="photo" class="w-full rounded-lg px-3 py-2.5 text-sm input-field" accept="image/*" multiple>
+          <div class="text-[11px] text-slate-400 mt-1">एक साथ multiple photos select कर सकते हो।</div>
+        </div>
+
+        <button id="submitBtn" type="submit" class="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 transition">
+          Submit
+        </button>
+
+      </form>
+
+    <div id="status" class="mt-4 text-center text-xs font-medium hidden"></div>
+    <div class="mt-4 text-center text-[11px] text-slate-400/80">
+      <span id="footer-text"></span>
+    </div>
+</div>
+
+    <!-- SUCCESS SCREEN -->
+<div id="success-screen" class="hidden w-full max-w-lg glass rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[420px]">
+    <div class="w-20 h-20 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center mb-6 text-4xl shadow-lg shadow-emerald-500/10 border border-emerald-500/20">
+        <i class="fa-solid fa-check"></i>
+    </div>
+    <h2 class="text-2xl font-extrabold text-white mb-2">धन्यवाद!</h2>
+    <p id="success-msg" class="text-slate-200/90 mb-8 leading-relaxed">टूर की जानकारी सेव कर ली गई है।</p>
+    <button onclick="window.location.reload()" class="px-6 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-sm text-white transition">
+        <i class="fa-solid fa-rotate-right mr-2"></i> नया फॉर्म
+    </button>
+</div>
+
+    <script src="assets/scripts/political_president_tour_form__script1.js"></script>
+    </body>
+    </html>
